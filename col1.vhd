@@ -21,6 +21,7 @@ entity col1 is
   rst: in std_logic;
   entradaX: in std_logic_vector(7 downto 0);
   pronto: out std_logic;
+  t_out: out std_logic_vector(15 downto 0);
   passos_out: out std_logic_vector(7 downto 0);
   maior_out: out std_logic_vector(15 downto 0)
   
@@ -52,12 +53,18 @@ begin
 
 --OPERATIVA
 --T
-process(clk, LD_T, SHR_T, SHL_T, LD_ACC_T)
+process(clk, LD_T, SHR_T, SHL_T, LD_ACC_T, rst)
 begin
     if(rising_edge(clk)) then
     
+    if(rst = '1') then
+    regT <= "0000000000000000";
+    
+    end if;
+    
     if (LD_T = '1') then
-        regT(regT'LEFT downto (regT'LEFT - entradaX'LENGTH+1)) <= entradaX;
+        --regT(regT'LEFT downto (regT'LEFT - entradaX'LENGTH+1)) <= entradaX;
+        regT(7 downto 0) <= entradaX;
     end if;
     
     if (SHR_T = '1') then
@@ -78,10 +85,20 @@ begin
 end process;
 
 -- AUX
-process(clk, LD_AUX)
+process(clk, LD_AUX, rst)
 begin
-    if(rising_edge(clk) and LD_AUX='1') then
+    
+
+    if(rising_edge(clk)) then
+    
+    if(rst = '1') then
+    regAUX <= "0000000000000000";
+    end if;
+    
+    if(LD_AUX = '1') then
     regAUX <= regT;
+    end if;
+    
     end if;
 end process;
 
@@ -89,18 +106,33 @@ end process;
 regACC <= std_logic_vector((unsigned(regT)) + (unsigned(regAUX))+ "1");
 
 --passos
-process(clk, INC_P)
+process(clk, INC_P, rst)
 begin
-    if(rising_edge(clk) and INC_P = '1') then
+    if(rising_edge(clk)) then
+    
+    if(rst = '1') then
+    regPassos <= "00000000";
+    end if;
+    
+    if(INC_P = '1') then
         regPassos <= regPassos + '1';
+    end if;
+    
     end if;
 end process;
 
 --MAIOR
-process(clk, LD_MAIOR)
+process(clk, LD_MAIOR, rst)
 begin
-    if (rising_edge(clk) and LD_MAIOR = '1') then
+    if (rising_edge(clk)) then
+    
+    if(rst = '1') then
+    regMAIOR <= "0000000000000000";
+    end if;
+    if(LD_MAIOR = '1') then
         regMAIOR <= regT;
+    end if;
+    
     end if;
 end process;
     
@@ -116,13 +148,13 @@ end process;
                end if;
      end process;
      
-     process(estado, start)
+     process(estado, start, prox_estado)
      begin
             
             case estado is
                 when s0 =>
                     pronto <= '0';
-
+                    
                     LD_T <= '0';
                     LD_AUX <= '0';
                     LD_ACC_T <= '0';
@@ -130,11 +162,12 @@ end process;
                     INC_P <= '0';
                     SHR_T <= '0';
                     SHL_T <= '0';
-                    regT <= "0000000000000000";
-                    regACC <= "0000000000000000";
-                    regAUX <= "0000000000000000";
-                    regMAIOR <= "0000000000000000";
-                    regPassos <= "00000000";
+                    
+                    --regT <= "0000000000000000";
+                    --regACC <= "0000000000000000";
+                    
+                    --regMAIOR <= "0000000000000000";
+                    --regPassos <= "00000000";
                     
                     if (start = '1') then
                         prox_estado <= s1;
@@ -256,6 +289,6 @@ end process;
 
 maior_out <= regMAIOR;
 passos_out <= regPassos;
-
+t_out <= regT;
 
 end Behavioral;
