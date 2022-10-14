@@ -40,13 +40,13 @@ signal INC_P: std_logic;
 
 
 signal  regT: std_logic_vector(15 downto 0);
-signal  regACC: std_logic_vector(15 downto 0);
+--signal  regACC: std_logic_vector(15 downto 0);
 signal  regMAIOR: std_logic_vector(15 downto 0);
 signal regPassos: std_logic_vector(7 downto 0);
 
 
 
-type t_estado is (s0, s1, s2, s3, s4, s5, sf);
+type t_estado is (s0, s1, s2, s3, s4, sf);
 signal estado, prox_estado: t_estado;
 
 begin
@@ -112,9 +112,6 @@ begin
 end process;
     
 
---regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
-
-
 --CONTROLE
 process (clk,rst)
 begin   
@@ -167,7 +164,7 @@ begin
                     LD_MAIOR <= '0';
                     INC_P <= '0';
                     
-                    if(regMAIOR < regT) then
+                    if(regMAIOR < regT) then 
                     LD_MAIOR <= '1';
                     end if;
                    
@@ -192,14 +189,10 @@ begin
 
                     pronto <= '0';
 
-                     if(regMAIOR < regT) then
+
+                    prox_estado <= s2;
                      
-                     prox_estado <= s5;
-                     
-                     else
-                        prox_estado <= s2;
-                     
-                     end if;
+                   
 
                 when s4 =>
                     
@@ -209,26 +202,8 @@ begin
                     LD_MAIOR <= '0';                   
                     INC_P <= '1';                
 
-                    if(regMAIOR < regT) then
-                     
-                     prox_estado <= s5;
-                     
-                     else
-                        prox_estado <= s2;
-                     end if;
-                
-               
-                
-                when s5 =>
-            
-                    LD_MAIOR <= '1';
-                    LD_ACC_T <= '0';
-                    LD_T <= '0';
-                    INC_P <= '0';
-                    SHR_T <= '0';
-                  
-
                     prox_estado <= s2;
+
                   
                 when sf =>
                     pronto <= '1';
@@ -239,6 +214,6 @@ begin
 maior_out <= regMAIOR;
 passos_out <= regPassos;
 t_out <= regT;
-acc_out <= regACC;
+
 
 end Behavioral;
