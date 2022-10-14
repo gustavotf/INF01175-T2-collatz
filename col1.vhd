@@ -41,40 +41,34 @@ signal INC_P: std_logic;
 
 signal  regT: std_logic_vector(15 downto 0);
 signal  regACC: std_logic_vector(15 downto 0);
---signal  regAUX: std_logic_vector(15 downto 0);
 signal  regMAIOR: std_logic_vector(15 downto 0);
 signal regPassos: std_logic_vector(7 downto 0);
 
---constant tres: integer:= 3;
 
-type t_estado is (s0, s1, s2, s3, s6, s7, sf);
+
+type t_estado is (s0, s1, s2, s3, s4, s5, sf);
 signal estado, prox_estado: t_estado;
 
 begin
 
 --OPERATIVA
---T
+--regT
 process(clk, LD_T, SHR_T, rst, LD_ACC_T)
 begin
     if(rising_edge(clk)) then
     
     if(rst = '1') then
-    regT <= "0000000000000000";
-    
+        regT <= "0000000000000000";
     end if;
-    
-    if (LD_ACC_T = '1') then
-        --regT(regT'LEFT downto (regT'LEFT - entradaX'LENGTH+1)) <= entradaX;
-        regT <= regACC;
-    end if;
-    
-    
     
     if (LD_T = '1') then
-        --regT(regT'LEFT downto (regT'LEFT - entradaX'LENGTH+1)) <= entradaX;
         regT(7 downto 0) <= entradaX;
     end if;
     
+    if (LD_ACC_T = '1') then
+        regT <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
+    end if;
+
     if (SHR_T = '1') then
         regT(14 downto 0) <= regT(15 downto 1);
         regT(15) <= '0';
@@ -85,13 +79,13 @@ begin
 end process;
 
 
---passos
+--regPassos
 process(clk, INC_P, rst)
 begin
     if(rising_edge(clk)) then
     
     if(rst = '1') then
-    regPassos <= "00000000";
+        regPassos <= "00000000";
     end if;
     
     if(INC_P = '1') then
@@ -101,38 +95,39 @@ begin
     end if;
 end process;
 
---MAIOR
+--regMAIOR
 process(clk, LD_MAIOR, rst)
 begin
     if (rising_edge(clk)) then
     
     if(rst = '1') then
-    regMAIOR <= "0000000000000000";
+        regMAIOR <= "0000000000000000";
     end if;
     if(LD_MAIOR = '1') then
         regMAIOR <= regT;
     end if;
     
+    
     end if;
 end process;
     
 
-regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
+--regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
 
 
 --CONTROLE
-    process (clk,rst)
-    begin   
+process (clk,rst)
+begin   
         
-            if(rst = '1') then
-                estado <= s0;
-               elsif (rising_edge(clk)) then
-               estado <= prox_estado;
-               end if;
-     end process;
+    if(rst = '1') then
+        estado <= s0;
+    elsif (rising_edge(clk)) then
+        estado <= prox_estado;
+    end if;
+end process;
      
-     process(estado, start, prox_estado)
-     begin
+process(estado, start)
+begin
             
             case estado is
                 when s0 =>
@@ -171,7 +166,10 @@ regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
                     LD_ACC_T <= '0';
                     LD_MAIOR <= '0';
                     INC_P <= '0';
- 
+                    
+                    if(regMAIOR < regT) then
+                    LD_MAIOR <= '1';
+                    end if;
                    
                     if(regT = "0000000000000001") then
                     prox_estado <= sf;
@@ -180,7 +178,7 @@ regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
                      
                      prox_estado <= s3;
                      elsif(regT(0) = '1') then
-                     prox_estado <= s6;
+                     prox_estado <= s4;
                      
                      end if;
                     
@@ -196,14 +194,14 @@ regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
 
                      if(regMAIOR < regT) then
                      
-                     prox_estado <= s7;
+                     prox_estado <= s5;
                      
                      else
                         prox_estado <= s2;
                      
                      end if;
 
-                when s6 =>
+                when s4 =>
                     
                     LD_T <= '0';
                     SHR_T <= '0';
@@ -213,7 +211,7 @@ regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
 
                     if(regMAIOR < regT) then
                      
-                     prox_estado <= s7;
+                     prox_estado <= s5;
                      
                      else
                         prox_estado <= s2;
@@ -221,7 +219,7 @@ regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
                 
                
                 
-                when s7 =>
+                when s5 =>
             
                     LD_MAIOR <= '1';
                     LD_ACC_T <= '0';
@@ -231,8 +229,7 @@ regACC <= std_logic_vector(unsigned(regT) +unsigned(regT)+ unsigned(regT) + 1 );
                   
 
                     prox_estado <= s2;
-
-
+                  
                 when sf =>
                     pronto <= '1';
 
